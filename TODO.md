@@ -3,7 +3,6 @@ Sure
 - Better error handling
  - What happens when stack is completely consumed?
 - Stop parsing EVERYTHING as a Clojure symbol and limit to bigintegers/strings (but somehow keep interop)
- - Arbitrary precision integers by default
  - Make a difference between " and '
 - `-main` must take up to two args, script and initial stack (both can be either strings or files)
  - If no input is specified in `-main`, read from stdin until all input is consumed

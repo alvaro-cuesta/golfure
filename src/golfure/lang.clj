@@ -99,6 +99,7 @@
      :int, :str, :blk, :arr"
   (condp = (type x)
     Long :int
+    BigInt :int
     String :str
     Block :blk
     clojure.lang.PersistentVector :arr
