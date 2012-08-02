@@ -1,6 +1,7 @@
 (ns golfure.test.builtins
-  (:require [golfure.builtins :as builtins]
-            [golfure.interpreter :as interpreter])
+  (:require [golfure.builtins :as builtins])
+  (:require [golfure.lang :as lang])
+  (:require [golfure.core])
   (:use clojure.test))
 
 (deftest test-tilde
@@ -15,14 +16,14 @@
 
   (is (= [6] (builtins/tilde
                ["3 3 +"]
-               builtins/default-symbols))
+               golfure.core/golfscript-symbols))
       "tilde (~) - string (evaluate)")
 
   (is (= [6] (builtins/tilde
-               [(interpreter/string-to-block
+               [(lang/string-to-block
                   "3 3 +"
-                  builtins/default-symbols)]
-               builtins/default-symbols))
+                  golfure.core/golfscript-symbols)]
+               golfure.core/golfscript-symbols))
       "tilde (~) - block (evaluate)")
 
   (is (= [5 4 3 2 1] (builtins/tilde [[1 2 3 4 5]] {}))
@@ -38,16 +39,16 @@
       "grave-accent (`) - string (quoted and escaped string) - needs escaping")
   
   (is (= ["3 3 +"] (builtins/grave-accent
-                     [(interpreter/string-to-block
+                     [(lang/string-to-block
                         "3 3 +"
-                        builtins/default-symbols)]
-                     builtins/default-symbols))
+                        golfure.core/golfscript-symbols)]
+                     golfure.core/golfscript-symbols))
       "grave-accent (`) - block (block code)")
   (is (= ["3 3 +"] (builtins/grave-accent
-                     [(interpreter/string-to-block
+                     [(lang/string-to-block
                         "3 3 +# ignore this comment"
-                        builtins/default-symbols)]
-                     builtins/default-symbols))
+                        golfure.core/golfscript-symbols)]
+                     golfure.core/golfscript-symbols))
       "grave-accent (`) - block (block code) - ignore comments")
   
   (is (= ["[1 2 3 4]"] (builtins/grave-accent [[1 2 3 4]] {}))
@@ -68,9 +69,9 @@
   
   (is (= [1] (builtins/shebang [[]] {}))
       "shebang (!) - block/array (empty = 1, else = 0) - empty block/array")
-  (is (= [0] (builtins/shebang [[(interpreter/string-to-block
+  (is (= [0] (builtins/shebang [[(lang/string-to-block
                                    "3 3 +"
-                                   builtins/default-symbols)]] {}))
+                                   golfure.core/golfscript-symbols)]] {}))
       "shebang (!) - block (empty = 1, else = 0) - non-empty block")
   (is (= [0] (builtins/shebang [[1]] {}))
       "shebang (!) - array (empty = 1, else = 0) - non-empty array"))
@@ -92,9 +93,9 @@
   (is (= ["abcd"] (builtins/dollar ["bcad"] {}))
       "dollar ($) - string (sort)")
   
-  (is (= [[5 4 3 2 1]] (builtins/dollar [(interpreter/string-to-block
+  (is (= [[5 4 3 2 1]] (builtins/dollar [(lang/string-to-block
                                            "-1*"
-                                           builtins/default-symbols) [5 3 4 1 2]] {}))
+                                           golfure.core/golfscript-symbols) [5 3 4 1 2]] {}))
       "dollar ($) - block (sort by mapping)")
   
   (is (= [[1 2 3 4]] (builtins/dollar [[3 2 4 1]] {}))
