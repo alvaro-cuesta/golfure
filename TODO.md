@@ -21,7 +21,7 @@ Sure
 
 Maybe
 =====
-- .toString for blocks
+- Make blocks lazy but realizable
 - Reverse stack
  - Pros
      - This
@@ -29,7 +29,6 @@ Maybe
      - That
 - Dollar
  - Sort by string mapping too
-- Force array parsing in RegEx
 - Use `reduce` instead of `recur` for `golfure.interpreter/execute-block`
 - Integrate ":" in RegEx
 - Go back to thread-wise `*symbols*`
@@ -40,3 +39,5 @@ Check
 Quoted from GolfScript site:
 
 - Strings are really just arrays of integers with a different output behavior.
+
+What does this imply?
