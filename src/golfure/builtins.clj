@@ -3,24 +3,43 @@
   (:use [clojure.pprint :only (pprint)])
   (:require [golfure.interpreter :as interpreter]))
 
+(defmacro builtin
+  "Macro for builtin definition, defined as:
+
+    (builtin def-name
+      docstring?
+      ([:type arg1 :type arg2 ... :type argN]
+        body1)
+      ...
+      ([:type arg1 :type arg2 ... :type argN]
+        bodyN))
+
+  Method precedence is top-down."
+  [builtin-name & methods]
+  (assert (every? #(= (count (first %)) (count (fnext %))) methods))
+  `(defn ~builtin-name [~'whole-stack ~'symbols]
+     (match [(map golfure.lang/golf-type ~'whole-stack)]
+            ~@(apply concat
+                (for [[types# vars# & body#] methods]
+                  `[[~(list `[~@types# & ~'rest] :seq)]
+                    (let [[~@vars# & ~'stack] ~'whole-stack] ~@body#)]))
+            [~'_] (throw (Exception. (str "Couldn't match " ~'whole-stack))))))
+
 (builtin tilde
   ([:int] [x]
     (cons (bit-not x) stack))
   ([:str] [x]
-    (interpreter/execute-block
-      (interpreter/string-to-block x symbols)
+    ((interpreter/string-to-block x symbols)
       stack
       symbols))
   ([:blk] [x]
-    (interpreter/execute-block x stack symbols))
+    (x stack symbols))
   ([:arr] [x]
     (reduce cons (reverse x) stack)))
 
 (builtin grave-accent
   ([:str] [x]
     (cons (str \" (clojure.string/escape x {\" "\\\""}) \") stack))
-  ([:blk] [x]
-    (cons (apply str (map :token x)) stack))
   ([_] [x]
     (cons (str x) stack)))
 
@@ -42,9 +61,7 @@
   ([:blk :arr] [b a]
     (cons (map second
                (sort (map
-                       #(vector
-                          interpreter/execute-block b [%] symbols
-                          %)
+                       #(vector (b [%] symbols) %)
                        a)))
           stack))
   ([:arr] [a]
