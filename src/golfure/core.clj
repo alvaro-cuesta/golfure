@@ -22,6 +22,8 @@
                  (pprint symbols)
                  stack)}))
 
+;;;
+
 (defn execute
   ([program initial-stack initial-symbols]
     ((golfure.lang/string-to-block program initial-symbols)

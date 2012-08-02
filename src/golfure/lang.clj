@@ -97,8 +97,9 @@
 (defn golf-type [x]
   "Returns x's GolfureScript type, one of:
      :int, :str, :blk, :arr"
-  (cond
-    (= (type x) Long) :int
-    (= (type x) String) :str
-    (= (type x) Block) :blk
-    (coll? x) :arr))
+  (condp = (type x)
+    BigDecimal :int
+    String :str
+    Block :blk
+    PersistentVector :arr
+    (throw (Exception. (str x " is not a GolfScript type (is: " (type x) ")")))))
