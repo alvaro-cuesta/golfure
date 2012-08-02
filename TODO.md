@@ -1,6 +1,5 @@
 Sure
 ====
-- docstring? in builtin macro
 - Better error handling
  - More asserts in builtin macro
  - What happens when stack is completely consumed?

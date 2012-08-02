@@ -28,10 +28,10 @@
                     methods)
             "(count types) = (count args)")
     `(defn ~builtin-name
-       ~(when docstring? docstring)
+       ~(if docstring? docstring "")
        ~['whole-stack 'symbols]
        (match
-         [~(map golfure.lang/golf-type ~'whole-stack)]
+         [(map golfure.lang/golf-type ~'whole-stack)]
          ~@(apply concat
                   (for [[types# vars# & body#] methods]
                     `[[~(list `[~@types# & ~'rest] :seq)]
