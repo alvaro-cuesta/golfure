@@ -1,15 +1,34 @@
 (ns golfure.core
-  (:use golfure.interpreter)
-  (:require [golfure.builtins :as builtins]))
+  (:require [golfure.builtins :as builtins])
+  (:use [clojure.pprint :only (pprint)]))
+
+(def golfscript-symbols
+  {"~" builtins/tilde
+   "`" builtins/grave-accent
+   "!" builtins/shebang
+   "@" builtins/at
+   "$" builtins/dollar
+   "+" builtins/plus})
+
+(def debug-symbols
+  (into
+    golfscript-symbols
+    {"stack" (fn [stack symbols]
+               (println "Stack: ")
+               (pprint stack)
+               stack)
+     "symbols" (fn [stack symbols]
+                 (println "Symbols: ")
+                 (pprint symbols)
+                 stack)}))
 
 (defn execute
-  ([program initial-stack symbols]
-    (execute-block
-      (string-to-block program symbols)
+  ([program initial-stack initial-symbols]
+    ((golfure.lang/string-to-block program initial-symbols)
       initial-stack
-      symbols))
+      initial-symbols))
   ([program initial-stack]
-    (execute program initial-stack builtins/default-symbols))
+    (execute program initial-stack debug-symbols))
   ([program]
     (execute program [])))
 
