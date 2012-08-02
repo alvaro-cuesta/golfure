@@ -12,6 +12,8 @@
   (applyTo [this args]
     (clojure.lang.AFn/applyToHelper this args)))
 
+(declare golf-type)
+
 (defn- compile-token
   "Compiles 'token' using 'symbols' as a symbol map.
 
@@ -27,9 +29,10 @@
   [token symbols]
   (or (symbols token)
       (fn [stack symbols]
-        (or (symbols token)
+        (or (and (symbols token)
+                 ((symbols token) stack symbols))
             (try (let [value (eval (read-string token))]
-                   (if value
+                   (if (and value (golf-type value))
                      (cons value stack)))
               (catch RuntimeException e
                 stack))))))
@@ -87,7 +90,7 @@
   (Block.
     (map #(token-to-element % symbols)
          (keep
-           #(when-not (= ((vec %) 0) \#) %) ; Discard comments
+           #(when-not (= ((vec %) 0) \#) %) ; discard comments
            (re-seq
              #"[a-zA-Z_][a-zA-Z0-9_]*|'(?:\\.|[^'])*'?|\"(?:\\.|[^\"])*\"?|-?[0-9]+|#[^\n\r]*|."
              string)))))
@@ -99,11 +102,11 @@
      :int, :str, :blk, :arr"
   (condp = (type x)
     Long :int
-    BigInt :int
+    clojure.lang.BigInt :int
     String :str
     Block :blk
     clojure.lang.PersistentVector :arr
-    (throw (Exception. (str x " is not a GolfScript type (is: " (type x) ")")))))
+    (throw (RuntimeException. (str x " is not a GolfScript type (is: " (type x) ")")))))
 
 (defn coerce [value type]
   "Coerces a GolfScript value to another type."
@@ -114,16 +117,14 @@
                              value))
     [:int :blk] (Block. [(fn [stack symbols]
                            (cons value stack))])
-    
+
     [:str :str] value
     [:arr :str] (apply str
                        (mapcat #(Character/toChars %)
                                value))
     [:int :str] (str value)
-    
+
     [:arr :arr] value
     [:int :arr] [value]
     
-    [:int :int] value
-    
-    (throw (Exception. (str "Invalid coercion: " value " (type "(golf-type value) ") cannot be coerced to" type)))))
+    [:int :int] value))
