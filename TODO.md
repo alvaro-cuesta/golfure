@@ -3,7 +3,7 @@ Sure
 - Better error handling
  - What happens when stack is completely consumed?
 - Clojure interop
- - Make a difference between " and '
+- Make a difference between " and '
 - `-main` must take up to two args, script and initial stack (both can be either strings or files)
  - If no input is specified in `-main`, read from stdin until all input is consumed
 - Block syntax

@@ -33,7 +33,8 @@
                  ((symbols token) stack symbols))
             (try (let [value (eval (read-string token))]
                    (if (and value (golf-type value))
-                     (cons value stack)))
+                     (cons value stack)
+                     stack))
               (catch RuntimeException e
                 stack))))))
 
