@@ -13,6 +13,7 @@
     (clojure.lang.AFn/applyToHelper this args)))
 
 (declare golf-type)
+(declare execute-block)
 
 (defn- compile-token
   "Compiles 'token' using 'symbols' as a symbol map.
@@ -49,6 +50,17 @@
 
 ;;;
 
+(deftype Block [elements]
+  java.lang.Object
+  (toString [this]
+    (apply str (map :token elements)))
+  clojure.lang.IFn
+  (invoke [this] elements)
+  (invoke [this stack symbols]
+    (execute-block elements stack symbols))
+  (applyTo [this args]
+    (clojure.lang.AFn/applyToHelper this args)))
+
 (defn- execute-block
   "Executes elements from 'block' until it's empty and
   returns the resulting stack.
@@ -63,23 +75,20 @@
         stack
         (into symbols
               {(str (first elements)) (first stack)}))
+    (= (str element) "{")
+      (recur
+        (drop-while #(not= (str %) "}")
+                    elements)
+        (cons (Block. (take-while #(not= (str %) "}")
+                                 elements))
+              stack)
+        symbols)
     element
       (recur
         elements
         (element stack symbols)
         symbols)
     :else stack))
-
-(deftype Block [elements]
-  java.lang.Object
-  (toString [this]
-    (apply str (map :token elements)))
-  clojure.lang.IFn
-  (invoke [this] elements)
-  (invoke [this stack symbols]
-    (execute-block elements stack symbols))
-  (applyTo [this args]
-    (clojure.lang.AFn/applyToHelper this args)))
 
 (defn string-to-block
   "Converts a string to a compiled GolfureScript block,
