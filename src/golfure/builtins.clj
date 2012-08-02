@@ -28,7 +28,7 @@
                     methods)
             "(count types) = (count args)")
     `(defn ~builtin-name
-       ~(if docstring? docstring "")
+       ~(if docstring? docstring "nil")
        ~['whole-stack 'symbols]
        (match
          [(map golfure.lang/golf-type ~'whole-stack)]
@@ -98,6 +98,14 @@
    Not actually a built in variable, it is part of the syntax ignoring everything until newline.")
 
 (builtin dollar
+  "$ (args: 1 or 2)
+  -----------------
+  If arg is an integer, copys nth item from top of $tack.
+    1 2 3 4 5  1$ -> 1 2 3 4 5 4
+  For arrays (including strings) a $ort is performed.
+    'asdf'$ -> \"adfs\"
+  For blocks, sort by some mapping.
+    [5 4 3 1 2]{-1*}$ -> [5 4 3 2 1]"
   ([:int] [n]
     (cons (nth stack n) stack))
   ([:str] [s]
@@ -112,7 +120,26 @@
     (cons (sort a) stack)))
 
 (builtin plus
+  "+ (args: coerce)
+  -----------------
+  Adds two numbers or concatenate
+    5 7+ -> 12
+    'asdf'{1234}+ -> {asdf 1234}
+    [1 2 3][4 5]+ -> [1 2 3 4 5]"
+  ([:blk _] [a b]
+    (cons (golfure.lang.Block. (concat (a) ((lang/coerce b :blk)))) stack))
+  ([_ :blk] [a b]
+    (cons (golfure.lang.Block. (concat ((lang/coerce a :blk)) (b))) stack))
+  
+  ([:str _] [a b]
+    (cons (str a (lang/coerce b :str)) stack))
+  ([_ :str] [a b]
+    (cons (str (lang/coerce a :str) b) stack))
+  
+  ([:arr _] [a b]
+    (cons (concat a (lang/coerce b :arr)) stack))
+  ([_ :arr] [a b]
+    (cons (concat (lang/coerce a :arr) b) stack))
+  
   ([:int :int] [a b]
-    (cons (+ a b) stack))
-  ([:str :str] [a b]
-    (cons (str a b) stack)))
+    (cons (+ a b) stack)))

@@ -1,7 +1,6 @@
 Sure
 ====
 - Better error handling
- - More asserts in builtin macro
  - What happens when stack is completely consumed?
 - Stop parsing EVERYTHING as a Clojure symbol and limit to bigintegers/strings (but somehow keep interop)
  - Arbitrary precision integers by default
@@ -29,7 +28,6 @@ Maybe
 - Dollar
  - Sort by string mapping too
 - Use `reduce` instead of `recur` for `golfure.interpreter/execute-block`
-- Integrate ":" in RegEx
 - Go back to thread-wise `*symbols*`
 - Web interface
 

@@ -25,6 +25,7 @@
 ;;;
 
 (defn execute
+  "Execute a GolfureScript program."
   ([program initial-stack initial-symbols]
     ((golfure.lang/string-to-block program initial-symbols)
       initial-stack
@@ -35,6 +36,12 @@
     (execute program [])))
 
 (defn -main
+  "Read a GolfScript 'source' and execute it, initializing
+  the stack to 'input'.
+
+  Both 'input' and 'source' can be either files or strings.
+
+  If 'input' is missing, stdin is read."
   ([source input]
     (let [script (clojure.java.io/file source)
           input-file (clojure.java.io/file input)]
