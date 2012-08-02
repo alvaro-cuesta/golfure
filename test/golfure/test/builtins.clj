@@ -100,3 +100,40 @@
   
   (is (= [[1 2 3 4]] (builtins/dollar [[3 2 4 1]] {}))
       "dollar ($) - array (sort)"))
+
+(deftest test-plus
+  (is (= [7 4 3 2 1] (builtins/plus [2 5 4 3 2 1] {}))
+      "plus (+) - int int (sum)")
+  
+  (is (= [[1 2 3 4 5 6]] (builtins/plus [[1 2 3] [4 5 6]] {}))
+      "plus (+) - array array (concat)")
+  (is (= [[1 2]] (builtins/plus [1 [2]] {}))
+      "plus (+) - array int (concat)")
+  (is (= [[2 1]] (builtins/plus [[2] 1] {}))
+      "plus (+) - int array (concat)")
+  
+  (is (= ["holamundo"] (builtins/plus ["hola" "mundo"] {}))
+      "plus (+) - string string (concat)")
+  (is (= ["2adios"] (builtins/plus [2 "adios"] {}))
+      "plus (+) - string int (concat)")
+  (is (= ["adios2"] (builtins/plus ["adios" 2] {}))
+      "plus (+) - int string (concat)")
+  (is (= ["hola23"] (builtins/plus [[50 51] "hola"] {}))
+      "plus (+) - string array (concat array chars)")
+  (is (= ["23hola"] (builtins/plus ["hola" [50 51]] {}))
+      "plus (+) - array string (concat array chars)")
+
+  (is false
+      "plus (+) - block block (add to block)")
+  (is false
+      "plus (+) - block int (add to block cons operation)")
+  (is false
+      "plus (+) - int block (add to block cons operation)")
+  (is false
+      "plus (+) - block array (add to block coercing elements)")
+  (is false
+      "plus (+) - array block (add to block coercing elements)")
+  (is false
+      "plus (+) - block string (add to block parsing string)")
+  (is false
+      "plus (+) - string block (add to block parsing string)"))
