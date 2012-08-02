@@ -43,7 +43,7 @@
                string))))
 
 (defn execute-block
-  [[{:keys [fun token]} & elements] stack symbols]
+  [[element & elements] stack symbols]
   "Consumes elements from 'block' (see string-to-block)
   until no more are found, and returns the resulting stack. 
 
@@ -56,9 +56,9 @@
                     (rest elements)
                     stack
                     (into symbols
-                          {((first elements) :token) (first stack)}))
-    fun (recur
-          elements
-          (fun stack symbols)
-          symbols)
+                          {(str (first elements)) (first stack)}))
+    element (recur
+              elements
+              (element stack symbols)
+              symbols)
     :else stack))

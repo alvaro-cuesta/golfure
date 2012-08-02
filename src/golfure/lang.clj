@@ -2,7 +2,12 @@
   "GolfureScript language d"
   (:use [clojure.core.match :only [match]]))
 
-(defrecord Element [fun token])
+(defrecord Element [fun token]
+  java.lang.Object
+  (toString [this] (:token this))
+  clojure.lang.IFn
+  (invoke [this stack symbols] ((:fun this) stack symbols))
+  (applyTo [this args] (clojure.lang.AFn/applyToHelper this args)))
 
 (defn golf-type [x]
   "Returns x's GolfureScript type, one of:

@@ -1,6 +1,5 @@
 Sure
 ====
-- GitHub
 - docstring? in builtin macro
 - Better error handling
  - More asserts in builtin macro
@@ -22,6 +21,7 @@ Sure
 
 Maybe
 =====
+- .toString for blocks
 - Reverse stack
  - Pros
      - This
