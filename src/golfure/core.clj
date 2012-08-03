@@ -1,6 +1,8 @@
 (ns golfure.core
   (:require [golfure.builtins :as builtins])
-  (:use [clojure.pprint :only (pprint)]))
+  (:use clojure.tools.cli)
+  (:use [clojure.pprint :only (pprint)])
+  (:gen-class))
 
 (def golfscript-symbols
   {"~" builtins/tilde
@@ -8,7 +10,9 @@
    "!" builtins/shebang
    "@" builtins/at
    "$" builtins/dollar
-   "+" builtins/plus})
+   "+" builtins/plus
+   "-" builtins/minus
+   "*" builtins/asterisk})
 
 (def debug-symbols
   (into
@@ -42,15 +46,27 @@
   Both 'input' and 'source' can be either files or strings.
 
   If 'input' is missing, stdin is read."
-  ([source input]
-    (let [script (clojure.java.io/file source)
-          input-file (clojure.java.io/file input)]
+  [& args]
+  (let [[options args banner]
+        (cli args
+             ["-r" "--run" "Run string (ignores [code])"]
+             ["-i" "--input" "Input file (stdin if missing)"]
+             ["-s" "--stack" "Stack (ignores --input)"]
+             ["-y" "--symbols" "Symbol table [golscript, debug]" :default "golfscript"]
+             ["-h" "--help" "Show this message" :default false :flag true])]
+    (when (:help options)
+      (println banner)
+      (System/exit 0))
+    (println (apply str (flatten (reverse
       (execute
-        (if (.isFile script)
-          (slurp script)
-          source)
-        (if (.isFile input-file)
-          [(apply str (line-seq (clojure.java.io/reader input-file)))]
-          input))))
-  ([source]
-    (-main source *in*)))
+        (or (:run options)
+            (slurp (first args)))
+        (or (and (:stack options)
+                 ((golfure.lang/string-to-block (:stack options) {}) [] {}))
+            (and (:input options)
+                 (slurp (:input options)))
+            [])
+        (eval (symbol
+                (str "golfure.core/"
+                     (:symbols options)
+                     "-symbols"))))))))))
