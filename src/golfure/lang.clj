@@ -52,7 +52,7 @@
 (defrecord Block [elements]
   java.lang.Object
   (toString [this]
-    (apply str "{" (apply str (map :token (:elements this))) "}"))
+    (apply str "{" (apply str (map :token elements)) "}"))
   clojure.lang.IFn
   (invoke [this] elements)
   (invoke [this stack symbols]
