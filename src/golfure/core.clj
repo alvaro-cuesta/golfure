@@ -53,7 +53,7 @@
              ["-i" "--input" "Input file (stdin if missing)"]
              ["-s" "--stack" "Stack (ignores --input)"]
              ["-y" "--symbols" "Symbol table [golscript, debug]" :default "golfscript"]
-             ["-h" "--help" "Show this message" :default false :flag true])]
+             ["-h" "-?" "--help" "Show this message" :default false :flag true])]
     (when (:help options)
       (println banner)
       (System/exit 0))
