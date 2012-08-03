@@ -30,8 +30,7 @@
   [token symbols]
   (or (symbols token)
       (fn [stack symbols]
-        (or (and (symbols token)
-                 ((symbols token) stack symbols))
+        (or (symbols token)
             (try (let [value (eval (read-string token))]
                    (if (and value (golf-type value))
                      (cons value stack)
@@ -50,10 +49,10 @@
 
 ;;;
 
-(deftype Block [elements]
+(defrecord Block [elements]
   java.lang.Object
   (toString [this]
-    (apply str (map :token elements)))
+    (apply str "{" (apply str (map :token (:elements this))) "}"))
   clojure.lang.IFn
   (invoke [this] elements)
   (invoke [this stack symbols]
@@ -137,4 +136,6 @@
     [:arr :arr] value
     [:int :arr] [value]
     
-    [:int :int] value))
+    [:int :int] value
+    
+    (throw (Exception. (str "Invalid coercion: " value " (type " (golf-type value) ") cannot be coerced to" type)))))
