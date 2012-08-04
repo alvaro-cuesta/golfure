@@ -73,6 +73,8 @@
     {1}` -> \"{1}\""
   ([:str] [x]
     (cons (str \" (clojure.string/escape x {\" "\\\""}) \") stack))
+  ([:blk] [x]
+    (cons (apply str (map :token (x))) stack))
   ([_] [x]
     (cons (str x) stack)))
 
@@ -82,6 +84,8 @@
   0 [] \"\" {} yield 1, everything else 0"
   ([:int] [x]
     (cons (if (zero? x) 1 0) stack))
+  ([_:blk] [x]
+    (cons (if (empty? (x)) 1 0) stack))
   ([_] [x]
     (cons (if (empty? x) 1 0) stack)))
 
@@ -116,6 +120,20 @@
                        #(vector (b [%] symbols) %)
                        a)))
           stack))
+  ([:blk :str] [b s]
+    (cons (apply str
+            (map second
+                 (sort (map
+                         #(vector (b [%] symbols) %)
+                         s)))
+            stack)))
+  ([:blk :blk] [b1 b2]
+    (cons (golfure.lang.Block.
+            (map second
+                 (sort (map
+                         #(vector (b1 [%] symbols) %)
+                         (b2)))))
+          stack))
   ([:arr] [a]
     (cons (sort a) stack)))
 
@@ -126,20 +144,126 @@
     5 7+ -> 12
     'asdf'{1234}+ -> {asdf 1234}
     [1 2 3][4 5]+ -> [1 2 3 4 5]"
-  ([:blk _] [a b]
-    (cons (golfure.lang.Block. (concat (a) ((lang/coerce b :blk)))) stack))
-  ([_ :blk] [a b]
-    (cons (golfure.lang.Block. (concat ((lang/coerce a :blk)) (b))) stack))
+  ([:blk _] [b x]
+    (cons (golfure.lang.Block. (concat (b) ((lang/coerce x :blk)))) stack))
+  ([_ :blk] [x b]
+    (cons (golfure.lang.Block. (concat ((lang/coerce x :blk)) (b))) stack))
   
-  ([:str _] [a b]
-    (cons (str a (lang/coerce b :str)) stack))
-  ([_ :str] [a b]
-    (cons (str (lang/coerce a :str) b) stack))
+  ([:str _] [s x]
+    (cons (str s (lang/coerce x :str)) stack))
+  ([_ :str] [x s]
+    (cons (str (lang/coerce x :str) s) stack))
   
-  ([:arr _] [a b]
-    (cons (concat a (lang/coerce b :arr)) stack))
-  ([_ :arr] [a b]
-    (cons (concat (lang/coerce a :arr) b) stack))
+  ([:arr _] [a x]
+    (cons (concat a (lang/coerce x :arr)) stack))
+  ([_ :arr] [x a]
+    (cons (concat (lang/coerce x :arr) a) stack))
   
   ([:int :int] [a b]
     (cons (+ a b) stack)))
+
+(builtin minus
+  "- (args: coerce)
+  -----------------
+  Note the way - is parsed in the first example.
+    1 2-3+ -> 1 -1
+    1 2 -3+ -> 1 -1
+    1 2- 3+ -> 2
+    [5 2 5 4 1 1][1 2]- -> [5 5 4]"
+  ([:blk _] [b x]
+    (cons (golfure.lang.Block.
+            (filter #(not-any? (fn [x] (= x %)) (b))
+                    ((lang/coerce x :blk))))
+          stack))
+  ([_ :blk] [x b]
+    (cons (golfure.lang.Block.
+            (filter #(not-any? (fn [x] (= x %)) ((lang/coerce x :blk)))
+                    (b)))
+          stack))
+  
+  ([:str _] [s x]
+    (cons (apply str
+                 (filter #(not-any? (fn [x] (= x %)) s)
+                         (lang/coerce x :str)))
+          stack))
+  ([_ :str] [x s]
+    (cons (apply str
+                 (filter #(not-any? (fn [x] (= x %)) (lang/coerce x :str))
+                         s))
+          stack))
+  
+  ([:arr _] [a x]
+    (cons (filter #(not-any? (fn [x] (= x %)) a)
+                  (lang/coerce x :arr))
+          stack))
+  ([_ :arr] [x a]
+    (cons (filter #(not-any? (fn [x] (= x %)) (lang/coerce x :arr))
+                  a)
+          stack))
+  
+  ([:int :int] [a b]
+    (cons (- b a) stack)))
+
+(builtin asterisk
+  "* (args: order)
+  ----------------
+  * can mean many things, the choice of behavior is determined by the type.
+  Multiplication
+    2 4* -> 8
+  Execute a block a certain number of times, note the order of operands
+  does not matter because these are automatically ordered first.
+    2 {2*} 5* -> 64
+  Array/string repeat
+    [1 2 3]2* -> [1 2 3 1 2 3]
+    3'asdf'* -> \"asdfasdfasdf\"
+  Join
+    [1 2 3]','* -> \"1,2,3\"
+    [1 2 3][4]* -> [1 4 2 4 3]
+    'asdf'' '* -> \"a s d f\"
+    [1 [2] [3 [4 [5]]]]'-'* -> \"1-\002-\003\004\005\"
+    [1 [2] [3 [4 [5]]]][6 7]* -> [1 6 7 2 6 7 3 [4 [5]]]
+  Fold. Symbol choice for fold comes from ruby golf trick: eval [1,2,3,4,5]*\"+\".
+    [1 2 3 4]{+}* -> 10
+    'asdf'{+}* -> 414"
+  ([:int :int] [a b]
+    (cons (* a b) stack))
+  ([:int :arr] [n a]
+    (cons (reduce into [] (repeat n a)) stack))
+  ([:arr :int] [a n]
+    (cons (reduce into [] (repeat n a)) stack))
+  ([:int :str] [n s]
+    (cons (apply str (repeat n s)) stack))
+  ([:str :int] [s n]
+    (cons (apply str (repeat n s)) stack))
+  
+  ([:int :blk] [n b]
+    (loop [stack stack
+           n n]
+      (if (zero? n)
+        stack
+        (recur (b stack symbols) (dec n)))))
+  ([:blk :int] [b n]
+    (loop [stack stack
+           n n]
+      (if (zero? n)
+        stack
+        (recur (b stack symbols) (dec n)))))
+
+  ([:str :arr] [s a] ;; PROBABLEMENTE MAL
+    (cons (apply str (interpose s a)) stack))
+  ([:arr :str] [a s] ;; PROBABLEMENTE MAL
+    (cons (apply str (interpose a s)) stack))
+  ([:arr :arr] [a b]
+    (cons (mapcat #(if-not (coll? %) [%] %)
+                  (interpose a b) stack)))
+  ([:str :str] [a b]
+    (cons (apply str (interpose a b)) stack))
+
+  ([:blk :arr] [b a]
+    (cons (apply concat (reduce b a)) stack))
+  ([:arr :blk] [a b]
+    (cons (apply concat (reduce b a)) stack))
+  ([:blk :str] [b s]
+    (cons (apply concat (reduce b s)) stack))
+  ([:str :blk] [s b]
+    (cons (apply concat (reduce b s)) stack)))

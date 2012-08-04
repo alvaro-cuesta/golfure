@@ -89,6 +89,10 @@
       "dollar ($) - int (copy nth element from stack) - one")
   (is (= [5 5 4 3 2 1] (builtins/dollar [0 5 4 3 2 1] {}))
       "dollar ($) - int (copy nth element from stack) - zero")
+  (is (= [5 5 4 3 2 1] (builtins/dollar [100 5 4 3 2 1] {}))
+      "dollar ($) - int (copy nth element from stack) - overflow stack")
+  (is (= [5 5 4 3 2 1] (builtins/dollar [-1 5 4 3 2 1] {}))
+      "dollar ($) - int (copy nth element from stack) - underflow sstack")
   
   (is (= ["abcd"] (builtins/dollar ["bcad"] {}))
       "dollar ($) - string (sort)")
@@ -96,7 +100,13 @@
   (is (= [[5 4 3 2 1]] (builtins/dollar [(lang/string-to-block
                                            "-1*"
                                            golfure.core/golfscript-symbols) [5 3 4 1 2]] {}))
-      "dollar ($) - block (sort by mapping)")
+      "dollar ($) - block array (sort by mapping)")
+  (is (= ["wrronmgeeaa210"] (builtins/dollar [(lang/string-to-block
+                                           "-1*"
+                                           golfure.core/golfscript-symbols) "agromenawer102"] {}))
+      "dollar ($) - block string (sort by mapping)")
+  (is false
+      "dollar ($) - block block (sort by mapping)")
   
   (is (= [[1 2 3 4]] (builtins/dollar [[3 2 4 1]] {}))
       "dollar ($) - array (sort)"))

@@ -1,39 +1,35 @@
-Sure
-====
-- Better error handling
- - What happens when stack is completely consumed?
+## Now
+- Some plus tests left
+- Minus tests
+- Asterisk tests
+
+## Sure
+- Time flag
+- :parsefn in args
+- Meaningful variable names in builtins
+- lang/core tests
+- Nested blocks
+- Multiple files
+ - Feed output to other file's input
 - Clojure interop
 - Make a difference between " and '
-- `-main` must take up to two args, script and initial stack (both can be either strings or files)
- - If no input is specified in `-main`, read from stdin until all input is consumed
-- All builtins
-- Add more tests (all builtins + language)
-- README
- - Document differences with pure GolfScript
-- Re-read GolfScript site for quirks and review builtins
-- Document further
-- Clean code
- - Clean imports and such
+- Random tests which check with the real Ruby implementation
+- Read from stdin instead of [] default in main-
 - Get rid of declares
+- Check for expected errors in tests too
+- print/inspect-table for inspection
+- Parallel alternatives
 
-Maybe
-=====
+## Project
+- Generate documentation
+- Better project.clj
+- Leiningen 2
+- Upload to JAR repo
+- Re-read GolfScript site for quirks and review builtins
+
+## Maybe
 - Make blocks lazy but realizable
-- Reverse stack
- - Pros
-     - This
- - Cons
-     - That
-- Dollar
- - Sort by string mapping too
 - Use `reduce` instead of `recur` for `golfure.interpreter/execute-block`
-- Go back to thread-wise `*symbols*`
+- Go back to thread-wise `*symbols*` or atom
 - Web interface
-
-Check
-=====
-Quoted from GolfScript site:
-
-- Strings are really just arrays of integers with a different output behavior.
-
-What does this imply?
+- API interface

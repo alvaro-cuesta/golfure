@@ -1,5 +1,6 @@
 (ns golfure.core
   (:require [golfure.builtins :as builtins])
+  (:use clojure.inspector)
   (:use clojure.tools.cli)
   (:use [clojure.pprint :only (pprint)])
   (:gen-class))
