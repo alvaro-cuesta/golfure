@@ -1,12 +1,8 @@
-## Now
-- Some plus tests left
+## Sure
 - Minus tests
 - Asterisk tests
-
-## Sure
 - Time flag
 - :parsefn in args
-- Meaningful variable names in builtins
 - lang/core tests
 - Nested blocks
 - Multiple files
@@ -16,9 +12,10 @@
 - Random tests which check with the real Ruby implementation
 - Read from stdin instead of [] default in main-
 - Get rid of declares
-- Check for expected errors in tests too
+- Check for more expected errors in tests
 - print/inspect-table for inspection
 - Parallel alternatives
+- Gpush and such
 
 ## Project
 - Generate documentation

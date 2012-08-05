@@ -84,7 +84,7 @@
   0 [] \"\" {} yield 1, everything else 0"
   ([:int] [x]
     (cons (if (zero? x) 1 0) stack))
-  ([_:blk] [x]
+  ([:blk] [x]
     (cons (if (empty? (x)) 1 0) stack))
   ([_] [x]
     (cons (if (empty? x) 1 0) stack)))
@@ -101,8 +101,22 @@
    ---------
    Not actually a built in variable, it is part of the syntax ignoring everything until newline.")
 
-(builtin dollar
-  "$ (args: 1 or 2)
+(let [sort-with-mapping
+      (fn [x map-block pre-fn post-fn stack symbols]
+        (loop [[e & more] x
+               built []
+               stack stack]
+          (if e
+            (let [[newe & more-stack] (map-block (cons (pre-fn e) stack) symbols)]
+              (recur more
+                     (conj built [newe e])
+                     more-stack))
+            (cons (post-fn
+                    (map second
+                         (sort-by first built)))
+                  stack))))]
+  (builtin dollar
+    "$ (args: 1 or 2)
   -----------------
   If arg is an integer, copys nth item from top of $tack.
     1 2 3 4 5  1$ -> 1 2 3 4 5 4
@@ -110,99 +124,109 @@
     'asdf'$ -> \"adfs\"
   For blocks, sort by some mapping.
     [5 4 3 1 2]{-1*}$ -> [5 4 3 2 1]"
-  ([:int] [n]
-    (cons (nth stack n) stack))
-  ([:str] [s]
-    (cons (apply str (sort s)) stack))
-  ([:blk :arr] [b a]
-    (cons (map second
-               (sort (map
-                       #(vector (b [%] symbols) %)
-                       a)))
-          stack))
-  ([:blk :str] [b s]
-    (cons (apply str
-            (map second
-                 (sort (map
-                         #(vector (b [%] symbols) %)
-                         s)))
-            stack)))
-  ([:blk :blk] [b1 b2]
-    (cons (golfure.lang.Block.
-            (map second
-                 (sort (map
-                         #(vector (b1 [%] symbols) %)
-                         (b2)))))
-          stack))
-  ([:arr] [a]
-    (cons (sort a) stack)))
+    ([:int] [n]
+      (cons (nth stack n) stack))
+    ([:str] [s]
+      (cons (apply str (sort s)) stack))
+    ([:blk :arr] [b a]
+      (sort-with-mapping
+        a b
+        identity
+        identity
+        stack symbols))
+    ([:blk :str] [b s]
+      (sort-with-mapping
+        (map int s) b
+        identity
+        (comp (partial apply str)
+              (partial map char))
+        stack symbols))
+    ([:blk :blk] [b1 b2]
+      (sort-with-mapping
+        (b2) b1
+        :token
+        #(golfure.lang.Block. %)
+        stack symbols))
+    ([:arr] [a]
+      (cons (sort a) stack))))
 
-(builtin plus
-  "+ (args: coerce)
+(let [concat-blocks #(golfure.lang.Block. (concat (%) (%2)))]
+  (builtin plus
+    "+ (args: coerce)
   -----------------
   Adds two numbers or concatenate
     5 7+ -> 12
     'asdf'{1234}+ -> {asdf 1234}
     [1 2 3][4 5]+ -> [1 2 3 4 5]"
-  ([:blk _] [b x]
-    (cons (golfure.lang.Block. (concat (b) ((lang/coerce x :blk)))) stack))
-  ([_ :blk] [x b]
-    (cons (golfure.lang.Block. (concat ((lang/coerce x :blk)) (b))) stack))
+    ([:blk _] [b x]
+      (cons (concat-blocks (lang/coerce x :blk symbols) b)
+            stack))
+    ([_ :blk] [x b]
+      (cons (concat-blocks b (lang/coerce x :blk symbols))
+            stack))
   
-  ([:str _] [s x]
-    (cons (str s (lang/coerce x :str)) stack))
-  ([_ :str] [x s]
-    (cons (str (lang/coerce x :str) s) stack))
+    ([:str _] [s x]
+      (cons (str (lang/coerce x :str symbols) s)
+            stack))
+    ([_ :str] [x s]
+      (cons (str s (lang/coerce x :str symbols))
+            stack))
   
-  ([:arr _] [a x]
-    (cons (concat a (lang/coerce x :arr)) stack))
-  ([_ :arr] [x a]
-    (cons (concat (lang/coerce x :arr) a) stack))
+    ([:arr _] [a x]
+      (cons (concat (lang/coerce x :arr symbols) a)
+            stack))
+    ([_ :arr] [x a]
+      (cons (concat a (lang/coerce x :arr symbols))
+            stack))
   
   ([:int :int] [a b]
-    (cons (+ a b) stack)))
+    (cons (+ a b) stack))))
 
-(builtin minus
-  "- (args: coerce)
+(let [set-difference
+      (fn [a b]
+        (filter #(not-any? (fn [x] (= x %)) a)
+                b))]
+  (builtin minus
+    "- (args: coerce)
   -----------------
   Note the way - is parsed in the first example.
     1 2-3+ -> 1 -1
     1 2 -3+ -> 1 -1
     1 2- 3+ -> 2
     [5 2 5 4 1 1][1 2]- -> [5 5 4]"
-  ([:blk _] [b x]
-    (cons (golfure.lang.Block.
-            (filter #(not-any? (fn [x] (= x %)) (b))
-                    ((lang/coerce x :blk))))
-          stack))
-  ([_ :blk] [x b]
-    (cons (golfure.lang.Block.
-            (filter #(not-any? (fn [x] (= x %)) ((lang/coerce x :blk)))
-                    (b)))
-          stack))
+    ([:blk _] [b x]
+      (cons (golfure.lang.Block.
+              (set-difference (b)
+                              ((lang/coerce x :blk symbols))))
+            stack))
+    ([_ :blk] [x b]
+      (cons (golfure.lang.Block.
+              (set-difference ((lang/coerce x :blk symbols))
+                              (b)))
+            stack))
   
-  ([:str _] [s x]
-    (cons (apply str
-                 (filter #(not-any? (fn [x] (= x %)) s)
-                         (lang/coerce x :str)))
-          stack))
-  ([_ :str] [x s]
-    (cons (apply str
-                 (filter #(not-any? (fn [x] (= x %)) (lang/coerce x :str))
-                         s))
-          stack))
+    ([:str _] [s x]
+      (cons (apply str
+                   (set-difference s
+                                   (lang/coerce x :str symbols)))
+            stack))
+    ([_ :str] [x s]
+      (cons (apply str
+                   (set-difference (lang/coerce x :str symbols)
+                                   s))
+            stack))
   
-  ([:arr _] [a x]
-    (cons (filter #(not-any? (fn [x] (= x %)) a)
-                  (lang/coerce x :arr))
-          stack))
-  ([_ :arr] [x a]
-    (cons (filter #(not-any? (fn [x] (= x %)) (lang/coerce x :arr))
-                  a)
-          stack))
+    ([:arr _] [a x]
+      (cons (set-difference a
+                            (lang/coerce x :arr symbols))
+            stack))
+    ([_ :arr] [x a]
+      (cons (set-difference (lang/coerce x :arr symbols)
+                            a)
+            stack))
   
-  ([:int :int] [a b]
-    (cons (- b a) stack)))
+    ([:int :int] [a b]
+      (cons (- b a) stack))))
 
 (builtin asterisk
   "* (args: order)

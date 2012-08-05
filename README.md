@@ -6,9 +6,11 @@
 - Mapping of ints->char when arrays->string might be different than GolfScript's (due to charset differences, I think Ruby uses UTF-8 and Clojure UTF-16.)
 - Assignments are local to blocks! (this is probably a bug and will be fixed.)
 - Bad escaping of charset characters in a certain operation.
-- $ (int) fails if stack is overflowed
+- $ (int) fails if stack is over/underflowed
 - $ (block block) behaves differently
 - \* (block block) doesn't work
+- If a symbol is defined upon block compilation, it will be compiled (and not replaced by the future value upon execution)
+- Finishing stack and operating on it will cause and error (e.g. "2+" fails, while in GolfScript it returns "2")
 
 ## License
 

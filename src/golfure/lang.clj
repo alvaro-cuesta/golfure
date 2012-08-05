@@ -110,19 +110,21 @@
   "Returns x's GolfScript type, one of:
      :int, :str, :blk, :arr"
   (condp = (type x)
+    Integer :int
     Long :int
     clojure.lang.BigInt :int
     String :str
     Block :blk
     clojure.lang.PersistentVector :arr
-    (throw (RuntimeException. (str x " is not a GolfScript type (is: " (type x) ")")))))
+    (throw (RuntimeException.
+             (str x " is not a GolfScript type (is: " (type x) ")")))))
 
-(defn coerce [value type]
+(defn coerce [value type symbols]
   "Coerces a GolfScript value to another type."
   (condp = [(golf-type value) type]
     [:blk :blk] value
-    [:str :blk] (string-to-block value)
-    [:arr :blk] (Block. (map #(((coerce % :blk)) 0)
+    [:str :blk] (string-to-block value symbols)
+    [:arr :blk] (Block. (map #(string-to-block (coerce % :str symbols) symbols)
                              value))
     [:int :blk] (Block. [(fn [stack symbols]
                            (cons value stack))])
@@ -138,4 +140,5 @@
     
     [:int :int] value
     
-    (throw (Exception. (str "Invalid coercion: " value " (type " (golf-type value) ") cannot be coerced to" type)))))
+    (throw (RuntimeException.
+             (str "Invalid coercion: " value " (type " (golf-type value) ") cannot be coerced to" type)))))
